@@ -45,17 +45,19 @@ NumPy
 
 uv
 
+Git y GitHub
+
 Estructura del proyecto
 neurona-riego-plantas/
 ├── main.py
 ├── README.md
 ├── pyproject.toml
 ├── uv.lock
-├── .gitignore
-└── .venv/
+├── .python-version
+└── .gitignore
 
 
-La carpeta .venv no debe publicarse en GitHub.
+La carpeta .venv/ se utiliza para el entorno virtual local y no se publica en GitHub.
 
 Instalación
 
@@ -73,7 +75,7 @@ uv run python main.py
 
 Datos de entrenamiento
 
-Se utilizaron diez ejemplos:
+Se utilizaron los siguientes diez ejemplos:
 
 Caso	Humedad	Temperatura	Salida
 1	80 %	18 °C	0
@@ -86,6 +88,13 @@ Caso	Humedad	Temperatura	Salida
 8	30 %	32 °C	1
 9	20 %	35 °C	1
 10	10 %	38 °C	1
+
+Donde:
+
+0 significa no regar.
+
+1 significa regar.
+
 Normalización
 
 Las variables tienen escalas diferentes. La humedad puede llegar aproximadamente a 100 %, mientras que la temperatura se trabaja aproximadamente hasta 50 °C.
@@ -99,6 +108,19 @@ X_normalizado = X / escala
 La humedad se divide entre 100 y la temperatura entre 50.
 
 La misma escala se utiliza posteriormente para las condiciones nuevas. Esto permite que las dos entradas tengan valores en una escala cercana a 0 y 1.
+
+Datos normalizados
+Caso	Humedad normalizada	Temperatura normalizada
+1	0.80	0.36
+2	0.70	0.44
+3	0.65	0.56
+4	0.55	0.50
+5	0.50	0.64
+6	0.40	0.60
+7	0.35	0.50
+8	0.30	0.64
+9	0.20	0.70
+10	0.10	0.76
 
 La variable X_normalizado se utiliza durante el entrenamiento en:
 
@@ -127,18 +149,18 @@ Después se utiliza un umbral de 0.5:
 respuesta = (probabilidad >= 0.5).astype(int)
 
 
-Si la probabilidad es mayor o igual a 0.5, la salida es 1 y se decide regar. Si es menor que 0.5, la salida es 0 y se decide no regar.
+Si la probabilidad es mayor o igual a 0.5, la salida es 1 y se decide regar.
+
+Si es menor que 0.5, la salida es 0 y se decide no regar.
 
 Entrenamiento base
 
 La configuración inicial fue:
 
-Tasa de aprendizaje: 0.5
-
-Épocas: 10000
-
-Los resultados obtenidos fueron:
-
+Parámetro	Valor
+Tasa de aprendizaje	0.5
+Épocas	10000
+Resultados
 Parámetro	Resultado
 Peso de humedad	-19.503197
 Peso de temperatura	2.310111
@@ -146,6 +168,7 @@ Sesgo	7.402159
 Error final	0.019645
 Respuestas correctas	10/10
 Interpretación de los pesos
+Peso de la humedad
 
 El peso correspondiente a la humedad fue:
 
@@ -153,6 +176,8 @@ El peso correspondiente a la humedad fue:
 
 
 Su signo negativo indica que, según los datos utilizados, una mayor humedad disminuye la probabilidad de que la neurona indique que es necesario regar.
+
+Peso de la temperatura
 
 El peso correspondiente a la temperatura fue:
 
@@ -176,9 +201,7 @@ Humedad	Temperatura	Esperado	Probabilidad	Respuesta
 20 %	35 °C	1	0.9941	1
 10 %	38 °C	1	0.9993	1
 
-La neurona obtuvo:
-
-10/10 respuestas correctas
+Resultado: 10/10 respuestas correctas.
 
 Predicciones con condiciones nuevas
 
@@ -206,7 +229,16 @@ Tasa pequeña	10000	0.01	0.130048	10/10	0.5388
 Tasa moderada	10000	0.1	0.049728	10/10	0.5853
 Tasa alta	10000	1.0	0.011705	10/10	0.5263
 Tasa muy alta	10000	2.0	0.006566	10/10	0.5082
-Análisis de los experimentos
+Interpretación de los experimentos
+Experimento	Interpretación
+100 épocas	Aprendizaje insuficiente respecto al entrenamiento base; obtuvo un error mayor.
+1000 épocas	Mejoró respecto a 100 épocas, aunque todavía tuvo más error que el entrenamiento base.
+20000 épocas	Redujo el error respecto a 10000 épocas, aunque la mejora no fue proporcional al doble de épocas.
+Tasa 0.01	Aprendizaje lento; necesitó muchas actualizaciones para reducir el error.
+Tasa 0.1	Mejor que la tasa 0.01, pero con mayor error que las tasas más altas en este conjunto.
+Tasa 1.0	Logró una reducción importante del error.
+Tasa 2.0	En este conjunto de datos obtuvo el menor error, aunque una tasa alta no garantiza estabilidad en todos los problemas.
+Análisis
 1. ¿Por qué fue necesario normalizar la humedad y la temperatura?
 
 Fue necesario porque las variables utilizan escalas diferentes. La humedad puede llegar hasta 100, mientras que la temperatura se trabaja aproximadamente hasta 50.
@@ -223,7 +255,9 @@ Se conservó X para mostrar los datos originales en porcentajes de humedad y gra
 
 Con 100 épocas el error fue 0.165623, considerablemente mayor que el obtenido con 10000 épocas, que fue 0.019645.
 
-Sin embargo, en este conjunto de datos la neurona todavía clasificó correctamente los 10 ejemplos. Esto demuestra que acertar la clasificación binaria no significa necesariamente que el modelo tenga el menor error posible.
+Sin embargo, en este conjunto de datos la neurona todavía clasificó correctamente los 10 ejemplos.
+
+Esto demuestra que acertar la clasificación binaria no significa necesariamente que el modelo tenga el menor error posible.
 
 4. ¿Más épocas siempre produjeron una mejora importante?
 
@@ -265,7 +299,25 @@ En este proyecto se utiliza 0.5. Una probabilidad igual o superior a 0.5 se conv
 
 Esta neurona es solamente un modelo didáctico. Utiliza dos variables y diez ejemplos artificiales, por lo que no representa todas las condiciones que afectan las necesidades reales de una planta.
 
-En un sistema real también podrían ser importantes la especie de planta, humedad ambiental, radiación solar, tipo de suelo, lluvia, estación del año, velocidad del viento, profundidad de las raíces y características del sistema de riego.
+En un sistema real también podrían ser importantes:
+
+La especie de planta.
+
+La humedad ambiental.
+
+La radiación solar.
+
+El tipo de suelo.
+
+La lluvia.
+
+La estación del año.
+
+La velocidad del viento.
+
+La profundidad de las raíces.
+
+Las características del sistema de riego.
 
 Por lo tanto, las predicciones de este programa no deben utilizarse como una recomendación agronómica real.
 
@@ -283,6 +335,18 @@ Modificar el umbral no cambia los pesos porque los pesos solamente se modifican 
 El umbral se aplica después del entrenamiento para convertir las probabilidades en decisiones binarias.
 
 En estos diez datos concretos no hubo cambios en las clasificaciones al utilizar los tres umbrales porque las probabilidades obtenidas quedaron suficientemente alejadas de los límites de decisión relevantes.
+
+Verificación del proyecto
+
+El programa verifica que la neurona clasifique correctamente los diez datos de entrenamiento mediante una comprobación:
+
+assert np.array_equal(respuestas, y.astype(int))
+
+
+El resultado obtenido fue:
+
+VERIFICACION COMPLETADA
+La neurona clasifico correctamente los 10 datos.
 
 Conclusiones
 
